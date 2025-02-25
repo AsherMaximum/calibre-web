@@ -189,8 +189,8 @@ def HandleSyncRequest():
                            .order_by(ub.ArchivedBook.last_modified)
                            .join(ub.BookShelf, db.Books.id == ub.BookShelf.book_id)
                            .join(ub.Shelf)
-                           .filter(ub.Shelf.user_id == current_user.id)
-                           .filter(ub.Shelf.kobo_sync)
+                           .filter(or_(and_(ub.Shelf.user_id == current_user.id, ub.Shelf.kobo_sync),and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)))
+                        #    .filter(ub.Shelf.kobo_sync)
                            .distinct())
     else:
         changed_entries = calibre_db.session.query(db.Books,
@@ -719,7 +719,7 @@ def sync_shelves(sync_token, sync_results, only_kobo_shelves=False):
     shelflist = ub.session.query(ub.Shelf).outerjoin(ub.BookShelf).filter(
         or_(func.datetime(ub.Shelf.last_modified) > sync_token.tags_last_modified,
             func.datetime(ub.BookShelf.date_added) > sync_token.tags_last_modified),
-        ub.Shelf.user_id == current_user.id,
+        or_(ub.Shelf.user_id == current_user.id, and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)),
         *extra_filters
     ).distinct().order_by(func.datetime(ub.Shelf.last_modified).asc())
 
