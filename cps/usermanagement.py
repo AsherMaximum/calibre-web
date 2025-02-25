@@ -118,7 +118,7 @@ def load_user_from_reverse_proxy_header(req):
     if rp_header_name:
         rp_header_username = req.headers.get(rp_header_name)
         if rp_header_username:
-            user = ub.session.query(ub.User).filter(func.lower(ub.User.name) == rp_header_username.lower()).first()
+            user = ub.session.query(ub.User).filter(func.lower(ub.User.email) == rp_header_username.lower()).first()
             if user:
                 [limiter.limiter.storage.clear(k.key) for k in limiter.current_limits]
                 return user
