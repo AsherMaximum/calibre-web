@@ -192,10 +192,10 @@ def reconnect():
 @admin_required
 @user_login_required
 def update_thumbnails():
-    content = config.get_scheduled_task_settings()
-    if content['schedule_generate_book_covers']:
-        log.info("Update of Cover cache requested")
-        helper.update_thumbnail_cache()
+    # content = config.get_scheduled_task_settings()
+    # if content['schedule_generate_book_covers']:
+    log.info("Update of Cover cache requested")
+    helper.update_thumbnail_cache()
     return ""
 
 
