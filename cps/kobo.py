@@ -965,9 +965,9 @@ def HandleBookDeletionRequest(book_uuid):
         return redirect_or_proxy_request()
 
     book_id = book.id
-    is_archived = kobo_sync_status.change_archived_books(book_id, True)
-    if is_archived:
-        kobo_sync_status.remove_synced_book(book_id)
+    #is_archived = kobo_sync_status.change_archived_books(book_id, True)
+    #if is_archived:
+    kobo_sync_status.remove_synced_book(book_id)
     return "", 204
 
 
