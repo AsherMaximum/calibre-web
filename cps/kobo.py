@@ -401,7 +401,7 @@ def current_time():
 def get_description(book):
     if not book.comments:
         return None
-    return book.comments[0].text
+    return book.comments[0].text.replace('\n', '').replace('\n', '')
 
 
 def get_author(book):
