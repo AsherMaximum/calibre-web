@@ -103,13 +103,13 @@ class Identifiers(Base):
     val = Column(String(collation='NOCASE'), nullable=False)
     book = Column(Integer, ForeignKey('books.id'), nullable=False)
     amazon = {
-        "jp": "co.jp", 
-        "uk": "co.uk", 
-        "us": "com", 
-        "au": "com.au", 
-        "be": "com.be", 
-        "br": "com.br", 
-        "tr": "com.tr", 
+        "jp": "co.jp",
+        "uk": "co.uk",
+        "us": "com",
+        "au": "com.au",
+        "be": "com.be",
+        "br": "com.br",
+        "tr": "com.tr",
         "mx": "com.mx",
     }
 
@@ -151,6 +151,8 @@ class Identifiers(Base):
             return "ISSN"
         elif format_type == "isfdb":
             return "ISFDB"
+        elif format_type == "ebooks":
+            return "eBooks.com"
         if format_type == "lubimyczytac":
             return "Lubimyczytac"
         if format_type == "databazeknih":
@@ -194,6 +196,8 @@ class Identifiers(Base):
             return "http://www.isfdb.org/cgi-bin/pl.cgi?{0}".format(self.val)
         elif format_type == "databazeknih":
             return "https://www.databazeknih.cz/knihy/{0}".format(self.val)
+        elif format_type == "ebooks":
+            return "https://www.ebooks.com/en-us/book/{0}".format(self.val)
         elif self.val.lower().startswith("javascript:"):
             return quote(self.val)
         elif self.val.lower().startswith("data:"):
