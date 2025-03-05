@@ -483,6 +483,8 @@ def edit_list_user(param):
                     user.email = check_email(vals['value'])
                 elif param == 'kobo_only_shelves_sync':
                     user.kobo_only_shelves_sync = int(vals['value'] == 'true')
+                elif param == 'kobo_sync_public_shelves':
+                    user.kobo_sync_public_shelves = int(vals['value'] == 'true')
                 elif param == 'kindle_mail':
                     user.kindle_mail = valid_email(vals['value']) if vals['value'] else ""
                 elif param.endswith('role'):
@@ -636,6 +638,8 @@ def load_dialogtexts(element_id):
                           'for the selected user(s)?')
     elif element_id == "kobo_only_shelves_sync":
         texts["main"] = _('Are you sure you want to change shelf sync behavior for the selected user(s)?')
+    elif element_id == "kobo_sync_public_shelves":
+        texts["main"] = _('Are you sure you want to change public shelf sync behavior for the selected user(s)?')
     elif element_id == "db_submit":
         texts["main"] = _('Are you sure you want to change Calibre library location?')
     elif element_id == "admin_refresh_cover_cache":
@@ -1966,6 +1970,7 @@ def _handle_new_user(to_save, content, languages, translations, kobo_support):
         content.denied_column_value = config.config_denied_column_value
         # No default value for kobo sync shelf setting
         content.kobo_only_shelves_sync = to_save.get("kobo_only_shelves_sync", 0) == "on"
+        content.kobo_sync_public_shelves = to_save.get("kobo_sync_public_shelves", 0) == "on"
         ub.session.add(content)
         ub.session.commit()
         flash(_("User '%(user)s' created", user=content.name), category="success")
@@ -2044,6 +2049,7 @@ def _handle_edit_user(to_save, content, languages, translations, kobo_support):
 
         old_state = content.kobo_only_shelves_sync
         content.kobo_only_shelves_sync = int(to_save.get("kobo_only_shelves_sync") == "on") or 0
+        content.kobo_sync_public_shelves = int(to_save.get("kobo_sync_public_shelves") == "on") or 0
         # 1 -> 0: nothing has to be done
         # 0 -> 1: all synced books have to be added to archived books, + currently synced shelfs
         # which don't have to be synced have to be removed (added to Shelf archive)
