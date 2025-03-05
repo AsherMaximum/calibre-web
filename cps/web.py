@@ -1204,7 +1204,7 @@ def serve_book(book_id, book_format, anyname):
         try:
             headers = Headers()
             headers["Content-Type"] = mimetypes.types_map.get('.' + book_format, "application/octet-stream")
-            if not range_header:                
+            if not range_header:
                 headers['Accept-Ranges'] = 'bytes'
             df = getFileFromEbooksFolder(book.path, data.name + "." + book_format)
             return do_gdrive_download(df, headers, (book_format.upper() == 'TXT'))
@@ -1498,6 +1498,7 @@ def change_profile(kobo_support, local_oauth_check, oauth_status, translations, 
         current_user.kobo_only_shelves_sync = int(to_save.get("kobo_only_shelves_sync") == "on") or 0
         if old_state == 0 and current_user.kobo_only_shelves_sync == 1:
             kobo_sync_status.update_on_sync_shelfs(current_user.id)
+        current_user.kobo_sync_public_shelves = int(to_save.get("kobo_sync_public_shelves") == "on") or 0
 
     except Exception as ex:
         flash(str(ex), category="error")

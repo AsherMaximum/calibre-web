@@ -133,8 +133,14 @@
   {% endif %}
     {% if kobo_support and not content.role_anonymous() and not simple%}
     <div class="form-group">
-      <input type="checkbox" name="kobo_only_shelves_sync" id="kobo_only_shelves_sync" {% if content.kobo_only_shelves_sync %}checked{% endif %}>
+      <input type="checkbox" name="kobo_only_shelves_sync" id="kobo_only_shelves_sync" data-control="kobo-shelf-sync" {% if content.kobo_only_shelves_sync %}checked{% endif %}>
       <label for="kobo_only_shelves_sync">{{_('Sync only books in selected shelves with Kobo')}}</label>
+    </div>
+    <div data-related="kobo-shelf-sync">
+      <div class="form-group">
+        <input type="checkbox" name="kobo_sync_public_shelves" id="kobo_sync_public_shelves" {% if content.kobo_sync_public_shelves %}checked{% endif %}>
+        <label for="kobo_sync_public_shelves">{{_('Sync public shelves marked for Kobo sync')}}</label>
+      </div>
     </div>
     {% endif %}
     </div>

@@ -171,8 +171,20 @@ def HandleSyncRequest():
     calibre_db.reconnect_db(config, ub.app_DB_path)
 
     only_kobo_shelves = current_user.kobo_only_shelves_sync
+    sync_public_shelves = current_user.kobo_sync_public_shelves
 
     if only_kobo_shelves:
+        extra_filters=[]
+        if sync_public_shelves:
+            extra_filters.append(
+                or_(
+                    and_(ub.Shelf.user_id == current_user.id, ub.Shelf.kobo_sync),
+                    and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)
+                )
+            )
+        else:
+            extra_filters.append(ub.Shelf.kobo_sync)
+
         changed_entries = calibre_db.session.query(db.Books,
                                                    ub.ArchivedBook.last_modified,
                                                    ub.BookShelf.date_added,
@@ -182,15 +194,14 @@ def HandleSyncRequest():
                                                                           ub.ArchivedBook.user_id == current_user.id))
                            .filter(db.Books.id.notin_(calibre_db.session.query(ub.KoboSyncedBooks.book_id)
                                                       .filter(ub.KoboSyncedBooks.user_id == current_user.id)))
-                           .filter(ub.BookShelf.date_added > sync_token.books_last_modified)
+                           .filter(or_(ub.Shelf.is_public == 1, ub.BookShelf.date_added > sync_token.books_last_modified))
                            .filter(db.Data.format.in_(KOBO_FORMATS))
                            .filter(calibre_db.common_filters(allow_show_archived=True))
                            .order_by(db.Books.id)
                            .order_by(ub.ArchivedBook.last_modified)
                            .join(ub.BookShelf, db.Books.id == ub.BookShelf.book_id)
                            .join(ub.Shelf)
-                           .filter(or_(and_(ub.Shelf.user_id == current_user.id, ub.Shelf.kobo_sync),and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)))
-                        #    .filter(ub.Shelf.kobo_sync)
+                           .filter(*extra_filters)
                            .distinct())
     else:
         changed_entries = calibre_db.session.query(db.Books,
@@ -295,7 +306,7 @@ def HandleSyncRequest():
             })
             new_reading_state_last_modified = max(new_reading_state_last_modified, kobo_reading_state.last_modified)
 
-    sync_shelves(sync_token, sync_results, only_kobo_shelves)
+    sync_shelves(sync_token, sync_results, only_kobo_shelves, sync_public_shelves)
 
     # update last created timestamp to distinguish between new and changed entitlements
     if not cont_sync:
@@ -559,7 +570,11 @@ def HandleTagUpdate(tag_id):
     shelf = ub.session.query(ub.Shelf).filter(ub.Shelf.uuid == tag_id,
                                               ub.Shelf.user_id == current_user.id).one_or_none()
     if not shelf:
-        log.debug("Received Kobo tag update request on a collection unknown to CalibreWeb")
+        public_shelf = ub.session.query(ub.Shelf).filter(ub.Shelf.uuid == tag_id).one_or_none()
+        if public_shelf:
+            #if shelf is a public shelf not owned by the user, do not delete the book from the shelf
+            return make_response(' ', 200)
+        log.debug("Received Kobo tag update request on a collection (%s) unknown to CalibreWeb", tag_id)
         if config.config_kobo_proxy:
             return redirect_or_proxy_request()
         else:
@@ -651,8 +666,12 @@ def HandleTagRemoveItem(tag_id):
     shelf = ub.session.query(ub.Shelf).filter(ub.Shelf.uuid == tag_id,
                                               ub.Shelf.user_id == current_user.id).one_or_none()
     if not shelf:
+        public_shelf = ub.session.query(ub.Shelf).filter(ub.Shelf.uuid == tag_id).one_or_none()
+        if public_shelf:
+            #if shelf is a public shelf not owned by the user, do not delete the book from the shelf
+            return make_response('', 200)
         log.debug(
-            "Received a request to remove an item from a Collection unknown to CalibreWeb.")
+            "Received a request to remove an item from a Collection (%s) unknown to CalibreWeb.", tag_id)
         abort(404, description="Collection isn't known to CalibreWeb")
 
     if not shelf_lib.check_shelf_edit_permissions(shelf):
@@ -683,7 +702,7 @@ def HandleTagRemoveItem(tag_id):
 
 # Add new, changed, or deleted shelves to the sync_results.
 # Note: Public shelves that aren't owned by the user aren't supported.
-def sync_shelves(sync_token, sync_results, only_kobo_shelves=False):
+def sync_shelves(sync_token, sync_results, only_kobo_shelves=False, sync_public_shelves=False,):
     new_tags_last_modified = sync_token.tags_last_modified
     # transmit all archived shelfs independent of last sync (why should this matter?)
     for shelf in ub.session.query(ub.ShelfArchive).filter(ub.ShelfArchive.user_id == current_user.id):
@@ -715,11 +734,19 @@ def sync_shelves(sync_token, sync_results, only_kobo_shelves=False):
                 }
             })
         extra_filters.append(ub.Shelf.kobo_sync)
+        if sync_public_shelves:
+            extra_filters.append(
+                or_(
+                    ub.Shelf.user_id == current_user.id,
+                    and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)
+                )
+            )
+        else:
+            extra_filters.append(ub.Shelf.user_id == current_user.id)
 
     shelflist = ub.session.query(ub.Shelf).outerjoin(ub.BookShelf).filter(
         or_(func.datetime(ub.Shelf.last_modified) > sync_token.tags_last_modified,
             func.datetime(ub.BookShelf.date_added) > sync_token.tags_last_modified),
-        or_(ub.Shelf.user_id == current_user.id, and_(ub.Shelf.is_public, ub.Shelf.kobo_sync)),
         *extra_filters
     ).distinct().order_by(func.datetime(ub.Shelf.last_modified).asc())
 
