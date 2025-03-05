@@ -257,6 +257,7 @@ class User(UserBase, Base):
     remote_auth_token = relationship('RemoteAuthToken', backref='user', lazy='dynamic')
     view_settings = Column(JSON, default={})
     kobo_only_shelves_sync = Column(Integer, default=0)
+    kobo_sync_public_shelves = Column(Integer, default=0)
 
 
 if oauth_support:
@@ -281,6 +282,7 @@ class OAuthProvider(Base):
 class Anonymous(AnonymousUserMixin, UserBase):
     def __init__(self):
         self.kobo_only_shelves_sync = None
+        self.kobo_sync_public_shelves = None
         self.view_settings = None
         self.allowed_column_value = None
         self.allowed_tags = None
@@ -310,6 +312,7 @@ class Anonymous(AnonymousUserMixin, UserBase):
         self.allowed_column_value = data.allowed_column_value
         self.view_settings = data.view_settings
         self.kobo_only_shelves_sync = data.kobo_only_shelves_sync
+        self.kobo_sync_public_shelves = data.kobo_sync_public_shelves
 
     def role_admin(self):
         return False
@@ -600,6 +603,17 @@ def migrate_user_session_table(engine, _session):
             conn.execute(text("ALTER TABLE user_session ADD column 'expiry' Integer"))
             trans.commit()
 
+# migrate all settings missing in user table
+def migrate_user_table(engine, _session):
+    try:
+        _session.query(exists().where(User.kobo_sync_public_shelves)).scalar()
+        _session.commit()
+    except exc.OperationalError:  # Database is not compatible, some columns are missing
+        with engine.connect() as conn:
+            trans = conn.begin()
+            conn.execute(text("ALTER TABLE user ADD column 'kobo_sync_public_shelves' INTEGER"))
+            trans.commit()
+
 
 # Migrate database to current version, has to be updated after every database change. Currently, migration from
 # maybe 4/5 versions back to current should work.
@@ -609,6 +623,7 @@ def migrate_Database(_session):
     add_missing_tables(engine, _session)
     migrate_registration_table(engine, _session)
     migrate_user_session_table(engine, _session)
+    migrate_user_table(engine, _session)
 
 
 def clean_database(_session):
