@@ -121,6 +121,9 @@ class _Settings(_Base):
     config_login_type = Column(Integer, default=0)
 
     config_kobo_proxy = Column(Boolean, default=False)
+    config_kobo_subtitle_cc = Column(SmallInteger, default=0)
+    config_kobo_subtitle_prefix = Column(String, default="")
+    config_kobo_subtitle_suffix = Column(String, default="")
     config_kobo_pages_cc = Column(SmallInteger, default=0)
     config_kobo_words_cc = Column(SmallInteger, default=0)
     config_kobo_sync_public = Column(Boolean, default=False)

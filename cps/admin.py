@@ -246,10 +246,20 @@ def db_configuration():
 @user_login_required
 @admin_required
 def configuration():
+    subtitle_columns = (
+        calibre_db.session
+        .query(db.CustomColumns)
+        .filter(
+            db.CustomColumns.datatype.in_(["int", "text", "comments"]),
+            db.CustomColumns.mark_for_delete == 0
+        )
+        .all()
+    )
     wordspages_columns = calibre_db.session.query(db.CustomColumns) \
         .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
     return render_title_template("config_edit.html",
                                  config=config,
+                                 subtitleColumns=subtitle_columns,
                                  wordsPagesColumns=wordspages_columns,
                                  provider=oauthblueprints,
                                  feature_support=feature_support,
@@ -1803,6 +1813,9 @@ def _configuration_update_helper():
         reboot_required |= _config_checkbox_int(to_save, "config_kobo_sync")
         _config_int(to_save, "config_external_port")
         _config_checkbox_int(to_save, "config_kobo_proxy")
+        _config_int(to_save, "config_kobo_subtitle_cc")
+        _config_string(to_save, "config_kobo_subtitle_prefix")
+        _config_string(to_save, "config_kobo_subtitle_suffix")
         _config_int(to_save, "config_kobo_pages_cc")
         _config_int(to_save, "config_kobo_words_cc")
 
@@ -2110,6 +2123,7 @@ def _handle_edit_user(to_save, content, languages, translations, kobo_support):
 
 
 def extract_user_data_from_field(user, field):
+    match = re.search(field + r"=(.*?)($|(?<!\\),)", user, re.IGNORECASE | re.UNICODE)
     match = re.search(field + r"=(.*?)($|(?<!\\),)", user, re.IGNORECASE | re.UNICODE)
     if match:
         return match.group(1)
