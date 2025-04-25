@@ -486,6 +486,8 @@ def get_metadata(book):
             f"{getattr(book, f'custom_column_{config.config_kobo_subtitle_cc}')[0].value} "
             f"{config.config_kobo_subtitle_suffix or ''}"
         ).strip()
+    else:
+        subtitle = ""
 
     book_isbn = None
     book_pages = None
