@@ -480,14 +480,15 @@ def get_metadata(book):
                 log.error(e)
 
     book_uuid = book.uuid
+    subtitle = ""
     if config.config_kobo_subtitle_cc:
-        subtitle = (
-            f"{config.config_kobo_subtitle_prefix or ''} "
-            f"{getattr(book, f'custom_column_{config.config_kobo_subtitle_cc}')[0].value} "
-            f"{config.config_kobo_subtitle_suffix or ''}"
-        ).strip()
-    else:
-        subtitle = ""
+        subtitleColumn = getattr(book, f'custom_column_{config.config_kobo_subtitle_cc}')
+        if len(subtitleColumn):
+            subtitle = (
+                f"{config.config_kobo_subtitle_prefix or ''} "
+                f"{subtitleColumn[0].value} "
+                f"{config.config_kobo_subtitle_suffix or ''}"
+            ).strip()
 
     book_isbn = None
     book_pages = None
