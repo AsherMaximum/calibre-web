@@ -30,7 +30,7 @@ from .cw_login import AnonymousUserMixin, current_user
 from .cw_login import user_logged_in
 
 try:
-    from flask_dance.consumer.backend.sqla import OAuthConsumerMixin
+    from flask_dance.consumer.backend.sqla import OAuthConsumerMixin # type: ignore
     oauth_support = True
 except ImportError as e:
     # fails on flask-dance >1.3, due to renaming
