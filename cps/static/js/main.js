@@ -561,6 +561,9 @@ $(function() {
 
     $("#bookDetailsModal")
         .on("show.bs.modal", function(e) {
+            //add history entry to allow back button to close bookDetails modal
+            history.pushState({modalOpen: true}, null, null);
+
             $("#flash_danger").remove();
             $("#flash_success").remove();
             var $modalBody = $(this).find(".modal-body");
@@ -579,8 +582,19 @@ $(function() {
             });
         })
         .on("hidden.bs.modal", function() {
+            // if bookDetails modal is closed normally, remove history entry
+            if (history.state && history.state.modalOpen) {
+                history.back();
+              }
             $(this).find(".modal-body").html("...");
         });
+
+    // Grab back button event. If bookDetails modal is open, close it.
+    $(window).on("popstate", function(e) {
+        if ($("#bookDetailsModal").is(":visible")) {
+            $("#bookDetailsModal").modal("hide");
+        }
+    });
 
     $("#modal_kobo_token")
         .on("show.bs.modal", function(e) {
