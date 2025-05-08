@@ -444,12 +444,13 @@ div.log {
   }
 
 body > div.container-fluid > div.row-fluid > div.col-sm-10 {
-  max-height: calc(100vh - 111px);
+  flex: 1 1 auto;
   overflow-y: auto;
+
 }
 
 body > div.container-fluid > div.row-fluid > div.col-sm-2 {
-  max-height: calc(100vh - 111px);
+  flex: 1 1 auto;
   overflow-y: auto;
   /* hide scrollbar in IE, Edge */
   -ms-overflow-style: none;
