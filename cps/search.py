@@ -347,7 +347,7 @@ def render_adv_search_results(term, offset=None, order=None, limit=None):
         try:
             q = adv_search_custom_columns(cc, term, q)
         except AttributeError as ex:
-            log.debug_or_exception(ex)
+            log.error_or_exception(ex)
             flash(_("Error on search for custom columns, please restart Calibre-Web"), category="error")
 
     q = q.order_by(*sort).all()
