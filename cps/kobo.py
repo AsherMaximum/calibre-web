@@ -195,9 +195,9 @@ def HandleSyncRequest():
                                                                           ub.ArchivedBook.user_id == current_user.id))
                            .filter(or_(
                                 db.Books.id.notin_(calibre_db.session.query(ub.KoboSyncedBooks.book_id).filter(ub.KoboSyncedBooks.user_id == current_user.id)),
-                                db.Books.last_modified > sync_token.books_last_modified
+                                func.datetime(db.Books.last_modified) > sync_token.books_last_modified
                             ))
-                           .filter(ub.BookShelf.date_added > sync_token.books_last_modified)
+                           .filter(func.datetime(ub.BookShelf.date_added) > sync_token.books_last_modified)
                            .filter(db.Data.format.in_(KOBO_FORMATS))
                            .filter(calibre_db.common_filters(allow_show_archived=True))
                            .join(ub.BookShelf, db.Books.id == ub.BookShelf.book_id)
@@ -233,6 +233,7 @@ def HandleSyncRequest():
             shelf_entries
             .union_all(deleted_entries)
             .order_by(db.Books.id, ub.ArchivedBook.last_modified)
+            .group_by(db.Books.id)
         )
 
     else:
@@ -244,7 +245,7 @@ def HandleSyncRequest():
                                                                           ub.ArchivedBook.user_id == current_user.id))
                            .filter(or_(
                                 db.Books.id.notin_(calibre_db.session.query(ub.KoboSyncedBooks.book_id).filter(ub.KoboSyncedBooks.user_id == current_user.id)),
-                                db.Books.last_modified > sync_token.books_last_modified
+                                func.datetime(db.Books.last_modified) > sync_token.books_last_modified
                             ))
                            .filter(calibre_db.common_filters(allow_show_archived=True))
                            .filter(db.Data.format.in_(KOBO_FORMATS))
@@ -287,7 +288,7 @@ def HandleSyncRequest():
         )
         try:
             new_books_last_modified = max(
-                new_books_last_modified, book.date_added
+                new_books_last_modified, book.date_added.replace(tzinfo=None)
             )
         except AttributeError:
             pass
