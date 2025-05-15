@@ -25,7 +25,6 @@ import zipfile
 from time import gmtime, strftime
 import json
 from urllib.parse import unquote
-import uuid
 
 from flask import (
     Blueprint,
@@ -445,7 +444,7 @@ def create_book_entitlement(book, archived):
         "IsLocked": False,
         "LastModified": convert_to_kobo_timestamp_string(book.last_modified),
         "OriginCategory": "Imported",
-        "RevisionId": str(uuid.uuid4()),
+        "RevisionId": book_uuid,
         "Status": "Active",
     }
 
