@@ -285,8 +285,10 @@ def HandleSyncRequest():
             sync_results.append({"NewEntitlement": entitlement})
         else:
             log.debug("Marking as ChangedEntitlement")
-            sync_results.append({"ChangedEntitlement": entitlement})
-            sync_results.append({"ChangedProductMetadata": get_metadata(book.Books)})
+            entitlement["BookMetadata"] = get_metadata(book.Books)
+            sync_results.append({"ChangedProductMetadata": entitlement})
+            # sync_results.append({"ChangedEntitlement": entitlement})
+            # sync_results.append({"ChangedProductMetadata": get_metadata(book.Books)})
 
         new_books_last_modified = max(
             book.Books.last_modified.replace(tzinfo=None), new_books_last_modified
@@ -1184,6 +1186,7 @@ def HandleInitRequest():
         )
         log.debug('Kobo: Received unproxied request, changed request url to %s', calibre_web_url)
         kobo_resources["image_host"] = calibre_web_url
+        kobo_resources["reading_services_host"] = calibre_web_url
         kobo_resources["image_url_quality_template"] = unquote(calibre_web_url +
                                                                url_for("kobo.HandleCoverImageRequest",
                                                                        auth_token=kobo_auth.get_auth_token(),
