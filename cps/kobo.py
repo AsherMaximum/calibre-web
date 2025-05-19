@@ -186,11 +186,24 @@ def HandleSyncRequest():
         else:
             extra_filters.append(ub.Shelf.kobo_sync)
 
+        # build a scalar subquery that picks one thumbnail record per book
+        # for getting the generated_at of a thumbnail
+        # this is used to build the CoverImageId
+        thumb_sq = (
+            calibre_db.session.query(ub.Thumbnail.generated_at)
+            .filter(ub.Thumbnail.entity_id == db.Books.id)
+            .order_by(ub.Thumbnail.id)
+            .limit(1)
+            .correlate(db.Books)
+            .scalar_subquery()
+        )
+
         shelf_entries = calibre_db.session.query(db.Books,
                                                    ub.ArchivedBook.last_modified,
                                                    ub.BookShelf.date_added,
                                                    ub.ArchivedBook.is_archived,
-                                                   literal(False).label("deleted"))
+                                                   literal(False).label("deleted"),
+                                                   thumb_sq.label("thumbnail_generated_at"))
         shelf_entries = (shelf_entries
                            .join(db.Data).outerjoin(ub.ArchivedBook, and_(db.Books.id == ub.ArchivedBook.book_id,
                                                                           ub.ArchivedBook.user_id == current_user.id))
@@ -222,7 +235,8 @@ def HandleSyncRequest():
                 ub.ArchivedBook.last_modified,
                 db.Books.timestamp.label("date_added"),
                 ub.ArchivedBook.is_archived,
-                literal(True).label("deleted")
+                literal(True).label("deleted"),
+                thumb_sq.label("thumbnail_generated_at")
             )
             .join(ub.KoboSyncedBooks, and_(db.Books.id == ub.KoboSyncedBooks.book_id,
                                                           ub.KoboSyncedBooks.user_id == current_user.id))
@@ -548,10 +562,15 @@ def get_metadata(book):
         book_pages = getattr(book, "custom_column_"+str(config.config_kobo_pages_cc))[0].value
     if config.config_kobo_words_cc:
         book_words = getattr(book, "custom_column_"+str(config.config_kobo_words_cc))[0].value
+
+    #turn thumbnail generated_at timestamp into an epoch for use as the version
+    dt = datetime.strptime(book.thumbnail_generated_at, "%Y-%m-%d %H:%M:%S.%f")
+    version_str = f"{dt.timestamp():.0f}"
+
     metadata = {
         "Categories": ["00000000-0000-0000-0000-000000000001", ],
         # "Contributors": get_author(book),
-        "CoverImageId": book_uuid+"/"+str(uuid.uuid4()),
+        "CoverImageId": book_uuid+"/"+version_str,
         "CrossRevisionId": book_uuid,
         "CurrentDisplayPrice": {"CurrencyCode": "USD", "TotalAmount": 0},
         "CurrentLoveDisplayPrice": {"TotalAmount": 0},
