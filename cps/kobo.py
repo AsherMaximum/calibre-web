@@ -280,15 +280,20 @@ def HandleSyncRequest():
             ts_created = max(ts_created, book.date_added.replace(tzinfo=None))
         except AttributeError:
             pass
-
-        log.debug("Syncing book %s, ts_created: %s", book.Books.id, ts_created)
+        file_modified = get_book_file_modified(book.Books)
+        log.debug("Syncing book %s, ts_created: %s, book file modified: %s", book.Books.id, ts_created, file_modified)
         if ts_created > sync_token.books_last_created:
             log.debug("Marking as NewEntitlement")
             entitlement["BookMetadata"] = get_metadata(book.Books)
             sync_results.append({"NewEntitlement": entitlement})
         elif book.deleted:
-            log.debug("Marking as ChangedEntitlement")
+            log.debug("Marking as ChangedEntitlement for deletion")
             sync_results.append({"ChangedEntitlement": entitlement})
+        elif file_modified > sync_token.books_last_modified:
+            log.debug("Marking as ChangedEntitlement & ChangedProductMetadata for file update")
+            sync_results.append({"ChangedEntitlement": entitlement.copy()})
+            entitlement["BookMetadata"] = get_metadata(book.Books)
+            sync_results.append({"ChangedProductMetadata": entitlement})
         else:
             log.debug("Marking as ChangedProductMetadata")
             entitlement["BookMetadata"] = get_metadata(book.Books)
@@ -502,6 +507,27 @@ def get_language(book):
     if not book.languages:
         return 'en'
     return isoLanguages.get(part3=book.languages[0].lang_code).part1
+
+
+def get_book_file_modified(book):
+    kepub = [data for data in book.data if data.format == 'KEPUB']
+    revision = 0
+    for book_data in kepub if len(kepub) > 0 else book.data:
+        if book_data.format not in KOBO_FORMATS:
+            continue
+        for kobo_format in KOBO_FORMATS[book_data.format]:
+            # log.debug('Id: %s, Format: %s' % (book.id, kobo_format))
+            try:
+                if get_epub_layout(book, book_data) == 'pre-paginated':
+                    kobo_format = 'EPUB3FL'
+                version = helper.get_file_modified_epoch(book, kobo_format, book_data)
+                if version > revision:
+                    revision = version
+            except (zipfile.BadZipfile, FileNotFoundError) as e:
+                log.error(e)
+
+    modified_dt = datetime.fromtimestamp(revision, tz=timezone.utc).replace(tzinfo=None)
+    return modified_dt
 
 
 def get_metadata(book):
