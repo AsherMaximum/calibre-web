@@ -290,10 +290,13 @@ def HandleSyncRequest():
             log.debug("Marking as ChangedEntitlement for deletion")
             sync_results.append({"ChangedEntitlement": entitlement})
         elif file_modified > sync_token.books_last_modified:
-            log.debug("Marking as ChangedEntitlement & ChangedProductMetadata for file update")
-            sync_results.append({"ChangedEntitlement": entitlement.copy()})
+            log.debug("Marking as NewEntitlement & ChangedProductMetadata for file update")
+            changedEntitlement=entitlement.copy()
+            changedEntitlement["BookEntitlement"]=create_book_entitlement(book.Books, archived = book.is_archived or (only_kobo_shelves and book.deleted))
+            changedEntitlement["BookEntitlement"]["Accessibility"]="Preview"
+            sync_results.append({"ChangedEntitlement": changedEntitlement})
             entitlement["BookMetadata"] = get_metadata(book.Books)
-            sync_results.append({"ChangedProductMetadata": entitlement})
+            sync_results.append({"NewEntitlement": entitlement})
         else:
             log.debug("Marking as ChangedProductMetadata")
             entitlement["BookMetadata"] = get_metadata(book.Books)
