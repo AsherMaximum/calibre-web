@@ -546,10 +546,12 @@ def get_metadata(book):
     for i in book.identifiers:
         if i.format_type() == "ISBN":
             book_isbn = i.val
-    if config.config_kobo_pages_cc:
-        book_pages = getattr(book, "custom_column_"+str(config.config_kobo_pages_cc))[0].value
-    if config.config_kobo_words_cc:
-        book_words = getattr(book, "custom_column_"+str(config.config_kobo_words_cc))[0].value
+    pages = getattr(book, "custom_column_"+str(config.config_kobo_pages_cc))
+    if config.config_kobo_pages_cc and len(pages):
+        book_pages = pages[0].value
+    words = getattr(book, "custom_column_"+str(config.config_kobo_words_cc))
+    if config.config_kobo_words_cc and len(words):
+        book_words = words[0].value
 
     #get cover version from book cover file
     coverVersion = helper.get_book_cover_epoch_date_with_uuid(book_uuid)
