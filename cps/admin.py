@@ -228,6 +228,9 @@ def admin():
     t = timedelta(hours=config.schedule_duration // 60, minutes=config.schedule_duration % 60)
     schedule_duration = format_timedelta(t, threshold=.99)
 
+    if config.config_use_git_update and not _git_info['branch']:
+        _refresh_git_info()
+
     return render_title_template("admin.html", allUser=all_user, config=config, commit=commit,
                                  feature_support=feature_support, schedule_time=schedule_time,
                                  schedule_duration=schedule_duration, git_info=_git_info,
@@ -1591,13 +1594,19 @@ _git_info = {'branch': '', 'commit': '', 'subject': '', 'branches': []}
 
 def _refresh_git_info():
     ok, out = _run_git(['rev-parse', '--abbrev-ref', 'HEAD'])
+    if not ok:
+        log.debug('git rev-parse failed: %s', out)
     _git_info['branch'] = out.strip() if ok else ''
+
     ok, out = _run_git(['log', '-1', '--format=%h\t%s'])
     if ok and '\t' in out:
         _git_info['commit'], _git_info['subject'] = out.strip().split('\t', 1)
     else:
+        if not ok:
+            log.debug('git log failed: %s', out)
         _git_info['commit'] = ''
         _git_info['subject'] = ''
+
     ok, out = _run_git(['branch', '-a'])
     branches = []
     if ok:
@@ -1609,10 +1618,16 @@ def _refresh_git_info():
                 b = b[len('remotes/'):]
             if b not in branches:
                 branches.append(b)
+    else:
+        log.debug('git branch failed: %s', out)
     _git_info['branches'] = branches
+    log.debug('Git info refreshed: branch=%s commit=%s', _git_info['branch'], _git_info['commit'])
 
 
-_refresh_git_info()
+try:
+    _refresh_git_info()
+except Exception as ex:
+    log.error('Failed to load git info at startup: %s', ex)
 
 
 @admi.route("/git_pull", methods=['POST'])
