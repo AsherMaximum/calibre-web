@@ -234,7 +234,24 @@
         </tbody>
       </table>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      {%  if feature_support['updater'] %}
+      {%  if config.config_use_git_update %}
+      <table class="table table-condensed" style="width:auto; margin-bottom:8px;">
+        <tbody>
+          <tr><td><strong>{{_('Branch')}}</strong></td><td>{{git_info.branch}}</td></tr>
+          <tr><td><strong>{{_('Commit')}}</strong></td><td>{{git_info.commit}}</td></tr>
+          <tr><td><strong>{{_('Subject')}}</strong></td><td>{{git_info.subject}}</td></tr>
+        </tbody>
+      </table>
+      <form method="POST" action="{{url_for('admin.git_pull')}}" class="form-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="branch" class="form-control" style="margin-right:6px;">
+          {% for b in git_info.branches %}
+          <option value="{{b}}" {% if b == git_info.branch %}selected{% endif %}>{{b}}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">{{_('Git Pull')}}</button>
+      </form>
+      {%  elif feature_support['updater'] %}
       <div class="hidden" id="update_error"> <span>{{update_error}}</span></div>
       <div class="btn btn-primary" id="check_for_update">{{_('Check for Update')}}</div>
       <div class="btn btn-primary hidden" id="perform_update" data-toggle="modal" data-target="#StatusDialog">{{_('Perform Update')}}</div>

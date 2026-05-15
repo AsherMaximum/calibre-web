@@ -27,6 +27,7 @@ import operator
 import time
 import sys
 import string
+import subprocess
 from datetime import datetime, timedelta
 from datetime import time as datetime_time
 from functools import wraps
@@ -229,7 +230,7 @@ def admin():
 
     return render_title_template("admin.html", allUser=all_user, config=config, commit=commit,
                                  feature_support=feature_support, schedule_time=schedule_time,
-                                 schedule_duration=schedule_duration,
+                                 schedule_duration=schedule_duration, git_info=_git_info,
                                  title=_("Admin page"), page="admin")
 
 
@@ -1572,6 +1573,76 @@ def get_updater_status():
     return ''
 
 
+def _run_git(args, timeout=30):
+    try:
+        result = subprocess.run(
+            ['git', '-C', constants.BASE_DIR] + args,
+            capture_output=True, text=True, timeout=timeout
+        )
+        return result.returncode == 0, result.stdout + result.stderr
+    except FileNotFoundError:
+        return False, 'git executable not found'
+    except subprocess.TimeoutExpired:
+        return False, 'git command timed out'
+
+
+_git_info = {'branch': '', 'commit': '', 'subject': '', 'branches': []}
+
+
+def _refresh_git_info():
+    ok, out = _run_git(['rev-parse', '--abbrev-ref', 'HEAD'])
+    _git_info['branch'] = out.strip() if ok else ''
+    ok, out = _run_git(['log', '-1', '--format=%h\t%s'])
+    if ok and '\t' in out:
+        _git_info['commit'], _git_info['subject'] = out.strip().split('\t', 1)
+    else:
+        _git_info['commit'] = ''
+        _git_info['subject'] = ''
+    ok, out = _run_git(['branch', '-a'])
+    branches = []
+    if ok:
+        for line in out.splitlines():
+            b = line.strip().lstrip('* ')
+            if not b or '->' in b:
+                continue
+            if b.startswith('remotes/'):
+                b = b[len('remotes/'):]
+            if b not in branches:
+                branches.append(b)
+    _git_info['branches'] = branches
+
+
+_refresh_git_info()
+
+
+@admi.route("/git_pull", methods=['POST'])
+@user_login_required
+@admin_required
+def git_pull():
+    if not config.config_use_git_update:
+        abort(404)
+    target_branch = request.form.get('branch', '').strip()
+
+    if target_branch and target_branch != _git_info['branch']:
+        ok, out = _run_git(['checkout', target_branch])
+        _refresh_git_info()
+        if not ok:
+            log.error('Git checkout failed: %s', out)
+            flash(_(u'Git checkout failed: ') + out, category="error")
+            return redirect(url_for('admin.admin'))
+
+    ok, out = _run_git(['pull'], timeout=60)
+    _refresh_git_info()
+    if ok:
+        log.info('Git pull successful: %s', out)
+        flash(_(u'Git pull successful. Restart to apply changes.'), category="success")
+    else:
+        log.error('Git pull failed: %s', out)
+        flash(_(u'Git pull failed: ') + out, category="error")
+
+    return redirect(url_for('admin.admin'))
+
+
 def ldap_import_create_user(user, user_data):
     user_login_field = extract_dynamic_field_from_filter(user, config.config_ldap_user_object)
 
@@ -1843,6 +1914,7 @@ def _configuration_update_helper():
         reboot_required |=_config_string(to_save, "config_googlebooks_api_key")
         
         _config_int(to_save, "config_updatechannel")
+        _config_checkbox(to_save, "config_use_git_update")
 
         # Reverse proxy login configuration
         _config_checkbox(to_save, "config_allow_reverse_proxy_header_login")

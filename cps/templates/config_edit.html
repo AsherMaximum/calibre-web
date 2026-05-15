@@ -47,6 +47,10 @@
             </select>
         </div>
         <div class="form-group">
+          <input type="checkbox" id="config_use_git_update" name="config_use_git_update" {% if config.config_use_git_update %}checked{% endif %}>
+          <label for="config_use_git_update">{{_('Use local Git repository for updates')}}</label>
+        </div>
+        <div class="form-group">
           <label for="config_trustedhosts">{{_('Trusted Hosts (Comma Separated)')}}</label>
           <input type="text" class="form-control" id="config_trustedhosts" name="config_trustedhosts" value="{% if config.trustedhosts != None %}{{ config.config_trustedhosts }}{% endif %}" autocomplete="off">
         </div>
