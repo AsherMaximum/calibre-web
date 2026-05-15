@@ -1579,7 +1579,8 @@ def get_updater_status():
 def _run_git(args, timeout=30):
     try:
         result = subprocess.run(
-            ['git', '-C', constants.BASE_DIR] + args,
+            ['git', '-c', 'safe.directory=' + constants.BASE_DIR,
+             '-C', constants.BASE_DIR] + args,
             capture_output=True, text=True, timeout=timeout
         )
         return result.returncode == 0, result.stdout + result.stderr
