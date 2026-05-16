@@ -126,6 +126,9 @@ class _Settings(_Base):
     config_kobo_subtitle_cc = Column(SmallInteger, default=0)
     config_kobo_subtitle_prefix = Column(String, default="")
     config_kobo_subtitle_suffix = Column(String, default="")
+    config_kobo_pages_cc = Column(SmallInteger, default=0)
+    config_kobo_words_cc = Column(SmallInteger, default=0)
+    config_kobo_sync_public = Column(Boolean, default=False)
 
     config_ldap_provider_url = Column(String, default='example.org')
     config_ldap_port = Column(SmallInteger, default=389)

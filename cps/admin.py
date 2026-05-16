@@ -192,10 +192,10 @@ def reconnect():
 @user_login_required
 @admin_required
 def update_thumbnails():
-    content = config.get_scheduled_task_settings()
-    if content['schedule_generate_book_covers']:
-        log.info("Update of Cover cache requested")
-        helper.update_thumbnail_cache()
+    # content = config.get_scheduled_task_settings()
+    # if content['schedule_generate_book_covers']:
+    log.info("Update of Cover cache requested")
+    helper.update_thumbnail_cache()
     return ""
 
 
@@ -255,9 +255,12 @@ def configuration():
         )
         .all()
     )
+    wordspages_columns = calibre_db.session.query(db.CustomColumns) \
+        .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
     return render_title_template("config_edit.html",
                                  config=config,
                                  subtitleColumns=subtitle_columns,
+                                 wordsPagesColumns=wordspages_columns,
                                  provider=oauthblueprints,
                                  feature_support=feature_support,
                                  title=_("Basic Configuration"), page="config")
@@ -291,7 +294,7 @@ def view_configuration():
     read_column = calibre_db.session.query(db.CustomColumns) \
         .filter(and_(db.CustomColumns.datatype == 'bool', db.CustomColumns.mark_for_delete == 0)).all()
     restrict_columns = calibre_db.session.query(db.CustomColumns) \
-        .filter(and_(db.CustomColumns.datatype == 'text', db.CustomColumns.mark_for_delete == 0)).all()
+        .filter(and_(or_(db.CustomColumns.datatype == 'text', db.CustomColumns.datatype == 'enumeration'), db.CustomColumns.mark_for_delete == 0)).all()
     subtitle_columns = calibre_db.session.query(db.CustomColumns) \
         .filter(and_(or_(db.CustomColumns.datatype == 'text', db.CustomColumns.datatype == 'comments'), db.CustomColumns.mark_for_delete == 0)).all()
     languages = calibre_db.speaking_language()
@@ -493,6 +496,8 @@ def edit_list_user(param):
                     user.email = check_email(vals['value'])
                 elif param == 'kobo_only_shelves_sync':
                     user.kobo_only_shelves_sync = int(vals['value'] == 'true')
+                elif param == 'kobo_sync_public_shelves':
+                    user.kobo_sync_public_shelves = int(vals['value'] == 'true')
                 elif param == 'kindle_mail':
                     user.kindle_mail = valid_email(vals['value']) if vals['value'] else ""
                 elif param.endswith('role'):
@@ -658,6 +663,8 @@ def load_dialogtexts(element_id):
                           'for the selected user(s)?')
     elif element_id == "kobo_only_shelves_sync":
         texts["main"] = _('Are you sure you want to change shelf sync behavior for the selected user(s)?')
+    elif element_id == "kobo_sync_public_shelves":
+        texts["main"] = _('Are you sure you want to change public shelf sync behavior for the selected user(s)?')
     elif element_id == "db_submit":
         texts["main"] = _('Are you sure you want to change Calibre library location?')
     elif element_id == "admin_refresh_cover_cache":
@@ -992,7 +999,7 @@ def check_valid_subtitle_column(column):
 def check_valid_restricted_column(column):
     if column != "0":
         if not calibre_db.session.query(db.CustomColumns).filter(db.CustomColumns.id == column) \
-          .filter(and_(db.CustomColumns.datatype == 'text', db.CustomColumns.mark_for_delete == 0)).all():
+          .filter(and_(or_(db.CustomColumns.datatype == 'text', db.CustomColumns.datatype == 'enumeration'), db.CustomColumns.mark_for_delete == 0)).all():
             return False
     return True
 
@@ -1832,6 +1839,8 @@ def _configuration_update_helper():
         _config_int(to_save, "config_kobo_subtitle_cc")
         _config_string(to_save, "config_kobo_subtitle_prefix")
         _config_string(to_save, "config_kobo_subtitle_suffix")
+        _config_int(to_save, "config_kobo_pages_cc")
+        _config_int(to_save, "config_kobo_words_cc")
 
         if "config_upload_formats" in to_save:
             to_save["config_upload_formats"] = ','.join(
@@ -2000,6 +2009,7 @@ def _handle_new_user(to_save, content, languages, translations, kobo_support):
         content.denied_column_value = config.config_denied_column_value
         # No default value for kobo sync shelf setting
         content.kobo_only_shelves_sync = to_save.get("kobo_only_shelves_sync", 0) == "on"
+        content.kobo_sync_public_shelves = to_save.get("kobo_sync_public_shelves", 0) == "on"
         ub.session.add(content)
         ub.session.commit()
         flash(_("User '%(user)s' created", user=content.name), category="success")
@@ -2078,6 +2088,7 @@ def _handle_edit_user(to_save, content, languages, translations, kobo_support):
 
         old_state = content.kobo_only_shelves_sync
         content.kobo_only_shelves_sync = int(to_save.get("kobo_only_shelves_sync") == "on") or 0
+        content.kobo_sync_public_shelves = int(to_save.get("kobo_sync_public_shelves") == "on") or 0
         # 1 -> 0: nothing has to be done
         # 0 -> 1: all synced books have to be added to archived books, + currently synced shelfs
         # which don't have to be synced have to be removed (added to Shelf archive)
