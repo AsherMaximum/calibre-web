@@ -196,6 +196,12 @@
           <input type="checkbox" name="edit_shelf_role" id="edit_shelf_role" {% if conf.role_edit_shelfs() %}checked{% endif %}>
           <label for="edit_shelf_role">{{_('Allow Editing Public Shelves')}}</label>
         </div>
+        {% if conf.config_reading_progress %}
+        <div class="form-group">
+          <input type="checkbox" name="reading_progress_all_role" id="reading_progress_all_role" {% if conf.role_all_reading_progress() %}checked{% endif %}>
+          <label for="reading_progress_all_role">{{_('Allow all users reading progress')}}</label>
+        </div>
+        {% endif %}
         <div class="form-group">
         <label for="config_default_locale">{{_('Default Language')}}</label>
             <select name="config_default_locale" id="config_default_locale" class="form-control">

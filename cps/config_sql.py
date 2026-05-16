@@ -192,6 +192,9 @@ class _Settings(_Base):
     config_limiter_options = Column(String, default="")
     config_check_extensions = Column(Boolean, default=True)
 
+    config_reading_progress = Column(Boolean, default=False)
+    config_reading_progress_column = Column(SmallInteger, default=0)
+
     def __repr__(self):
         return self.__class__.__name__
 
@@ -277,6 +280,9 @@ class ConfigSQL(object):
 
     def role_delete_books(self):
         return self._has_role(constants.ROLE_DELETE_BOOKS)
+
+    def role_all_reading_progress(self):
+        return self._has_role(constants.ROLE_ALL_READING_PROGRESS)
 
     def show_element_new_user(self, value):
         return constants.has_flag(self.config_default_show, value)

@@ -16,6 +16,21 @@
                 <img id="detailcover" title="{{ entry.title }}"
                      src="{{ url_for('web.get_cover', book_id=entry.id, resolution='og', c=entry|last_modified) }}"/>
             </div>
+            {% if reading_progress_entries %}
+            <div class="detail-reading-progress">
+              {% for rp in reading_progress_entries %}
+              <small class="text-muted">
+                {%- if show_all_reading_progress and reading_progress_entries | length > 1 %}{{ rp.user }} &mdash; {% endif -%}
+                {{- rp.progress | formatfloat(1) }}%
+                {%- if rp.spent_minutes > 0 -%}
+                  {%- set h = (rp.spent_minutes // 60) | int -%}
+                  {%- set m = (rp.spent_minutes % 60) | int -%}
+                  &nbsp;({% if h > 0 %}{{ h }}h {{ m }}m{% else %}{{ m }}m{% endif %})
+                {%- endif -%}
+              </small><br>
+              {% endfor %}
+            </div>
+            {% endif %}
         </div>
         <div class="col-sm-9 col-lg-9 book-meta">
             <div class="btn-toolbar" role="toolbar">

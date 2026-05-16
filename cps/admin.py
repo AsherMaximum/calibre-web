@@ -315,12 +315,15 @@ def configuration():
     )
     wordspages_columns = calibre_db.session.query(db.CustomColumns) \
         .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
+    page_count_columns = calibre_db.session.query(db.CustomColumns) \
+        .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
     return render_title_template("config_edit.html",
                                  config=config,
                                  subtitleColumns=subtitle_columns,
                                  wordsPagesColumns=wordspages_columns,
                                  provider=oauthblueprints,
                                  feature_support=feature_support,
+                                 pageCountColumns=page_count_columns,
                                  title=_("Basic Configuration"), page="config")
 
 
@@ -2020,6 +2023,8 @@ def _configuration_update_helper():
         _config_checkbox(to_save, "config_kobo_series2_priority")
         _config_int(to_save, "config_kobo_pages_cc")
         _config_int(to_save, "config_kobo_words_cc")
+        _config_checkbox(to_save, "config_reading_progress")
+        _config_int(to_save, "config_reading_progress_column")
 
         if "config_upload_formats" in to_save:
             to_save["config_upload_formats"] = ','.join(

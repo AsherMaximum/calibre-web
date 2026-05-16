@@ -67,7 +67,8 @@ ROLE_PASSWD             = 1 << 4
 ROLE_ANONYMOUS          = 1 << 5
 ROLE_EDIT_SHELFS        = 1 << 6
 ROLE_DELETE_BOOKS       = 1 << 7
-ROLE_VIEWER             = 1 << 8
+ROLE_VIEWER                   = 1 << 8
+ROLE_ALL_READING_PROGRESS     = 1 << 9
 
 ALL_ROLES = {
                 "admin_role": ROLE_ADMIN,
@@ -78,6 +79,7 @@ ALL_ROLES = {
                 "edit_shelf_role": ROLE_EDIT_SHELFS,
                 "delete_role": ROLE_DELETE_BOOKS,
                 "viewer_role": ROLE_VIEWER,
+                "reading_progress_all_role": ROLE_ALL_READING_PROGRESS,
             }
 
 DETAIL_RANDOM           = 1 <<  0
@@ -97,7 +99,8 @@ SIDEBAR_RATING          = 1 << 13
 SIDEBAR_FORMAT          = 1 << 14
 SIDEBAR_ARCHIVED        = 1 << 15
 SIDEBAR_DOWNLOAD        = 1 << 16
-SIDEBAR_LIST            = 1 << 17
+SIDEBAR_LIST                = 1 << 17
+SIDEBAR_READING_PROGRESS    = 1 << 18
 
 sidebar_settings = {
                 "detail_random": DETAIL_RANDOM,
@@ -116,11 +119,12 @@ sidebar_settings = {
                 "sidebar_archived": SIDEBAR_ARCHIVED,
                 "sidebar_download": SIDEBAR_DOWNLOAD,
                 "sidebar_list": SIDEBAR_LIST,
+                "sidebar_reading_progress": SIDEBAR_READING_PROGRESS,
             }
 
 
 ADMIN_USER_ROLES        = sum(r for r in ALL_ROLES.values()) & ~ROLE_ANONYMOUS
-ADMIN_USER_SIDEBAR      = (SIDEBAR_LIST << 1) - 1
+ADMIN_USER_SIDEBAR      = (SIDEBAR_READING_PROGRESS << 1) - 1
 
 UPDATE_STABLE       = 0 << 0
 AUTO_UPDATE_STABLE  = 1 << 0
