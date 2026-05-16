@@ -20,7 +20,7 @@
       <tbody>
         {% for entry in entries %}
         <tr>
-          <td>{{ entry.title }}</td>
+          <td><a href="{{ url_for('web.show_book', book_id=entry.book_id) }}" data-toggle="modal" data-target="#bookDetailsModal" data-remote="false">{{ entry.title }}</a></td>
           <td>{{ entry.user }}</td>
           <td>{{ entry.progress | formatfloat(1) }}%</td>
           <td>{{ entry.last_modified | formatdate }}</td>

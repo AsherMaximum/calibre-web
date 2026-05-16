@@ -99,6 +99,7 @@ def reading_progress_page():
 
         entries.append({
             'title': title,
+            'book_id': book_id,
             'user': user.name,
             'progress': progress,
             'last_modified': bookmark.last_modified,
