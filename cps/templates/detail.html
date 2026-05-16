@@ -20,7 +20,7 @@
             <div class="detail-reading-progress">
               {% for rp in reading_progress_entries %}
               <small class="text-muted">
-                {%- if show_all_reading_progress %}{{ rp.user }} &mdash; {% endif -%}
+                {%- if show_all_reading_progress and reading_progress_entries | length > 1 %}{{ rp.user }} &mdash; {% endif -%}
                 {{- rp.progress | formatfloat(1) }}%
                 {%- if rp.spent_minutes > 0 -%}
                   {%- set h = (rp.spent_minutes // 60) | int -%}
