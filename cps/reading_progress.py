@@ -34,7 +34,7 @@ reading_progress = Blueprint('reading_progress', __name__)
 @reading_progress.route("/readingprogress")
 @user_login_required
 def reading_progress_page():
-    if not current_user.check_visibility(constants.SIDEBAR_READING_PROGRESS):
+    if not config.config_reading_progress or not current_user.check_visibility(constants.SIDEBAR_READING_PROGRESS):
         abort(404)
 
     KRS2 = aliased(ub.KoboReadingState)
@@ -48,7 +48,7 @@ def reading_progress_page():
         .scalar_subquery()
     )
 
-    results = (
+    query = (
         ub.session.query(ub.KoboReadingState, ub.KoboBookmark, ub.KoboStatistics, ub.User)
         .join(ub.KoboBookmark, ub.KoboBookmark.kobo_reading_state_id == ub.KoboReadingState.id)
         .join(ub.KoboStatistics, ub.KoboStatistics.kobo_reading_state_id == ub.KoboReadingState.id)
@@ -59,9 +59,12 @@ def reading_progress_page():
             ub.KoboBookmark.progress_percent < 100,
             ub.KoboBookmark.last_modified == max_complete_subq
         ))
-        .order_by(ub.KoboBookmark.last_modified.desc())
-        .all()
     )
+
+    if not current_user.role_all_reading_progress():
+        query = query.filter(ub.KoboReadingState.user_id == current_user.id)
+
+    results = query.order_by(ub.KoboBookmark.last_modified.desc()).all()
 
     book_ids = list({row[0].book_id for row in results})
 

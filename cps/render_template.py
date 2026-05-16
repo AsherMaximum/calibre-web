@@ -104,7 +104,8 @@ def get_sidebar_config(kwargs=None):
         {"glyph": "glyphicon-stats", "text": _('Reading Progress'), "link": 'reading_progress.reading_progress_page',
          "id": "reading", "visibility": constants.SIDEBAR_READING_PROGRESS,
          'public': (not current_user.is_anonymous),
-         "page": "reading_progress", "show_text": _('Show Reading Progress'), "config_show": content,
+         "page": "reading_progress", "show_text": _('Show Reading Progress'),
+         "config_show": content and config.config_reading_progress,
          "no_param": True})
     g.shelves_access = ub.session.query(ub.Shelf).filter(
         or_(ub.Shelf.is_public == 1, ub.Shelf.user_id == current_user.id)).order_by(ub.Shelf.name).all()

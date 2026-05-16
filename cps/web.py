@@ -1651,12 +1651,38 @@ def show_book(book_id):
             if media_format.format.lower() in constants.EXTENSIONS_AUDIO:
                 entry.audio_entries.append(media_format.format.lower())
 
+        reading_progress_entries = []
+        show_all_reading_progress = False
+        if (config.config_reading_progress
+                and current_user.check_visibility(constants.SIDEBAR_READING_PROGRESS)):
+            rp_query = (
+                ub.session.query(ub.KoboReadingState, ub.KoboBookmark, ub.KoboStatistics, ub.User)
+                .join(ub.KoboBookmark, ub.KoboBookmark.kobo_reading_state_id == ub.KoboReadingState.id)
+                .join(ub.KoboStatistics, ub.KoboStatistics.kobo_reading_state_id == ub.KoboReadingState.id)
+                .join(ub.User, ub.User.id == ub.KoboReadingState.user_id)
+                .filter(ub.KoboReadingState.book_id == book_id)
+                .filter(ub.KoboBookmark.progress_percent.isnot(None))
+                .filter(ub.KoboBookmark.progress_percent != 0)
+            )
+            if current_user.role_all_reading_progress():
+                show_all_reading_progress = True
+            else:
+                rp_query = rp_query.filter(ub.KoboReadingState.user_id == current_user.id)
+            for _, bookmark, statistics, user in rp_query.all():
+                reading_progress_entries.append({
+                    'user': user.name,
+                    'progress': bookmark.progress_percent,
+                    'spent_minutes': statistics.spent_reading_minutes or 0,
+                })
+
         return render_title_template('detail.html',
                                      entry=entry,
                                      cc=cc,
                                      is_xhr=request.headers.get('X-Requested-With') == 'XMLHttpRequest',
                                      title=entry.title,
                                      books_shelfs=book_in_shelves,
+                                     reading_progress_entries=reading_progress_entries,
+                                     show_all_reading_progress=show_all_reading_progress,
                                      page="book")
     else:
         log.debug("Selected book is unavailable. File does not exist or is not accessible")

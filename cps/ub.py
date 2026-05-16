@@ -172,6 +172,9 @@ class UserBase:
     def role_viewer(self):
         return self._has_role(constants.ROLE_VIEWER)
 
+    def role_all_reading_progress(self):
+        return self._has_role(constants.ROLE_ALL_READING_PROGRESS)
+
     @property
     def is_active(self):
         return True

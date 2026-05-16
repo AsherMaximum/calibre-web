@@ -246,10 +246,13 @@ def db_configuration():
 @user_login_required
 @admin_required
 def configuration():
+    page_count_columns = calibre_db.session.query(db.CustomColumns) \
+        .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
     return render_title_template("config_edit.html",
                                  config=config,
                                  provider=oauthblueprints,
                                  feature_support=feature_support,
+                                 pageCountColumns=page_count_columns,
                                  title=_("Basic Configuration"), page="config")
 
 
@@ -282,13 +285,10 @@ def view_configuration():
         .filter(and_(db.CustomColumns.datatype == 'bool', db.CustomColumns.mark_for_delete == 0)).all()
     restrict_columns = calibre_db.session.query(db.CustomColumns) \
         .filter(and_(db.CustomColumns.datatype == 'text', db.CustomColumns.mark_for_delete == 0)).all()
-    page_count_columns = calibre_db.session.query(db.CustomColumns) \
-        .filter(and_(db.CustomColumns.datatype == 'int', db.CustomColumns.mark_for_delete == 0)).all()
     languages = calibre_db.speaking_language()
     translations = get_available_locale()
     return render_title_template("config_view_edit.html", conf=config, readColumns=read_column,
                                  restrictColumns=restrict_columns,
-                                 pageCountColumns=page_count_columns,
                                  languages=languages,
                                  translations=translations,
                                  title=_("UI Configuration"), page="uiconfig")
@@ -593,7 +593,6 @@ def update_view_configuration():
     _config_int(to_save, "config_random_books")
     _config_int(to_save, "config_books_per_page")
     _config_int(to_save, "config_authors_max")
-    _config_int(to_save, "config_reading_progress_column")
     _config_string(to_save, "config_default_language")
     _config_string(to_save, "config_default_locale")
 
@@ -1806,6 +1805,8 @@ def _configuration_update_helper():
         reboot_required |= _config_checkbox_int(to_save, "config_kobo_sync")
         _config_int(to_save, "config_external_port")
         _config_checkbox_int(to_save, "config_kobo_proxy")
+        _config_checkbox(to_save, "config_reading_progress")
+        _config_int(to_save, "config_reading_progress_column")
 
         if "config_upload_formats" in to_save:
             to_save["config_upload_formats"] = ','.join(

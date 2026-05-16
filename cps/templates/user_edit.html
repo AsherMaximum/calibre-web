@@ -137,6 +137,12 @@
       <label for="kobo_only_shelves_sync">{{_('Sync only books in selected shelves with Kobo')}}</label>
     </div>
     {% endif %}
+    {% if config.config_reading_progress and not content.role_anonymous() and not simple %}
+    <div class="form-group">
+      <input type="checkbox" name="reading_progress_all_role" id="reading_progress_all_role" {% if content.role_all_reading_progress() %}checked{% endif %}>
+      <label for="reading_progress_all_role">{{_('Allow all users reading progress')}}</label>
+    </div>
+    {% endif %}
     </div>
     <div class="col-sm-12">
       <div id="user_submit" class="btn btn-default">{{_('Save')}}</div>
