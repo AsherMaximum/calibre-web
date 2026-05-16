@@ -115,10 +115,10 @@ def yesno(value, yes, no):
 
 @jinjia.app_template_filter('formatfloat')
 def formatfloat(value, decimals=1):
-    if not value or (isinstance(value, str) and not value.is_numeric()):
+    if (not value and value != 0) or (isinstance(value, str) and not value.isnumeric()):
         return value
     formated_value = ('{0:.' + str(decimals) + 'f}').format(value)
-    if formated_value.endswith('.' + "0" * decimals):
+    if '.' in formated_value:
         formated_value = formated_value.rstrip('0').rstrip('.')
     return formated_value
 
