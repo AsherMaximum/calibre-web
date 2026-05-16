@@ -1765,6 +1765,7 @@ def show_book(book_id):
                                      cc_link_cols=cc_link_cols,
                                      composite_vals=composite_vals,
                                      subtitle_cc=config.config_subtitle_column,
+                                     series2_label=config.config_series2_label,
                                      is_xhr=request.headers.get('X-Requested-With') == 'XMLHttpRequest',
                                      title=entry.title,
                                      books_shelfs=book_in_shelves,

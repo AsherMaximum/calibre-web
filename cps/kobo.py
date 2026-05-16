@@ -518,6 +518,15 @@ def get_seriesindex(book):
     return book.series_index if isinstance(book.series_index, float) else 1
 
 
+def _format_series_index(value, decimals=2):
+    if not value:
+        return str(value)
+    formatted = f'{value:.{decimals}f}'
+    if formatted.endswith('.' + '0' * decimals):
+        formatted = formatted.rstrip('0').rstrip('.')
+    return formatted
+
+
 def get_language(book):
     if not book.languages:
         return 'en'
@@ -571,15 +580,25 @@ def get_metadata(book):
                 log.error(e)
 
     book_uuid = book.uuid
-    subtitle = ""
+    subtitle_val = ""
     if config.config_kobo_subtitle_cc:
         subtitleColumn = getattr(book, f'custom_column_{config.config_kobo_subtitle_cc}')
         if len(subtitleColumn):
-            subtitle = (
+            subtitle_val = (
                 f"{config.config_kobo_subtitle_prefix or ''} "
                 f"{subtitleColumn[0].value} "
                 f"{config.config_kobo_subtitle_suffix or ''}"
             ).strip()
+
+    series2_val = ""
+    if config.config_series2_column and db.series2_link_class is not None and book.series2:
+        link = book.series2[0]
+        series2_val = f"Book {_format_series_index(link.extra)} of {link.value}"
+
+    if config.config_kobo_series2_priority:
+        subtitle = series2_val or subtitle_val
+    else:
+        subtitle = subtitle_val or series2_val
 
     book_isbn = None
     book_pages = None

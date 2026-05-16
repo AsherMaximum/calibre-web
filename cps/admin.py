@@ -2017,6 +2017,7 @@ def _configuration_update_helper():
         _config_int(to_save, "config_kobo_subtitle_cc")
         _config_string(to_save, "config_kobo_subtitle_prefix")
         _config_string(to_save, "config_kobo_subtitle_suffix")
+        _config_checkbox(to_save, "config_kobo_series2_priority")
         _config_int(to_save, "config_kobo_pages_cc")
         _config_int(to_save, "config_kobo_words_cc")
 
