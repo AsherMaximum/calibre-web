@@ -593,7 +593,7 @@ def get_metadata(book):
     series2_val = ""
     if config.config_series2_column and db.series2_link_class is not None and book.series2:
         link = book.series2[0]
-        series2_val = f"Book {_format_series_index(link.extra)} of {link.value}"
+        series2_val = f"{link.value} [#{_format_series_index(link.extra)}]"
 
     if config.config_kobo_series2_priority:
         subtitle = series2_val or subtitle_val
