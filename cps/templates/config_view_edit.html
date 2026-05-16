@@ -66,6 +66,15 @@
               </select>
         </div>
         <div class="form-group">
+          <label for="config_reading_progress_column">{{_('Word/Page Count Column for Reading Progress WPM')}}</label>
+              <select name="config_reading_progress_column" id="config_reading_progress_column" class="form-control">
+                <option value="0" {% if conf.config_reading_progress_column == 0 %}selected{% endif %}>{{ _('None (WPM disabled)') }}</option>
+                {%  for col in pageCountColumns %}
+                <option value="{{ col.id }}" {% if col.id == conf.config_reading_progress_column %}selected{% endif %}>{{ col.name }}</option>
+                {% endfor %}
+              </select>
+        </div>
+        <div class="form-group">
           <label for="config_title_regex">{{_('Regular Expression for Title Sorting')}}</label>
           <input type="text" class="form-control" name="config_title_regex" id="config_title_regex" value="{% if conf.config_title_regex != None %}{{ conf.config_title_regex }}{% endif %}" autocomplete="off">
         </div>

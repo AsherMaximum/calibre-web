@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+  <h2>{{title}}</h2>
+  {% if entries %}
+  <div class="reading-progress-table-wrap">
+    <table class="table table-striped reading-progress-table">
+      <thead>
+        <tr>
+          <th>{{_('Title')}}</th>
+          <th>{{_('User')}}</th>
+          <th>{{_('Progress')}}</th>
+          <th>{{_('Last Updated')}}</th>
+          <th>{{_('Time Spent')}}</th>
+          {% if has_wpm %}
+          <th>{{_('WPM')}}</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td>{{ entry.title }}</td>
+          <td>{{ entry.user }}</td>
+          <td>{{ entry.progress | formatfloat(1) }}%</td>
+          <td>{{ entry.last_modified | formatdate }}</td>
+          <td>
+            {%- set h = (entry.spent_minutes // 60) | int -%}
+            {%- set m = (entry.spent_minutes % 60) | int -%}
+            {%- if h > 0 -%}{{ h }}h {{ m }}m{%- else -%}{{ m }}m{%- endif -%}
+          </td>
+          {% if has_wpm %}
+          <td>
+            {%- if entry.wpm is not none -%}
+              {{ entry.wpm | formatfloat(1) }}
+            {%- else -%}
+              &mdash;
+            {%- endif -%}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>{{_('No books currently being read.')}}</p>
+  {% endif %}
+</div>
+{% endblock %}
