@@ -2992,8 +2992,11 @@ body > div.container-fluid > div > div.col-sm-10 > div > div > div.col-sm-3.col-
 }
 
 .cover .reading-in-progress {
+    position: relative;
+    top: -20px;
+    display: inline-block;
     font-size: 11px;
-    padding: 3px 5px;
+    padding: 2px 5px;
     line-height: 1.2;
     font-weight: 700;
 }
