@@ -255,6 +255,16 @@ span.glyphicon.glyphicon-tags {
   background-color: #fff;
 }
 
+.cover .reading-in-progress {
+  position: relative;
+  top: -20px;
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 5px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
 .cover .read {
   position: relative;
   top: -20px;
