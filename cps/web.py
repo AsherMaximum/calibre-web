@@ -758,10 +758,34 @@ def render_language_books(page, name, order):
 
 def render_read_books(page, are_read, as_xml=False, order=None):
     sort_param = order[0] if order else []
+    kobo_progress = {}
+    if are_read and not config.config_read_column:
+        progress_results = (
+            ub.session.query(
+                ub.KoboReadingState.book_id,
+                func.max(ub.KoboBookmark.progress_percent)
+            )
+            .join(ub.KoboBookmark, ub.KoboBookmark.kobo_reading_state_id == ub.KoboReadingState.id)
+            .filter(ub.KoboReadingState.user_id == current_user.id)
+            .filter(ub.KoboBookmark.progress_percent.isnot(None))
+            .filter(ub.KoboBookmark.progress_percent > 0)
+            .group_by(ub.KoboReadingState.book_id)
+            .having(func.max(ub.KoboBookmark.progress_percent) < 100)
+            .all()
+        )
+        kobo_progress = {row[0]: row[1] for row in progress_results}
     if not config.config_read_column:
         if are_read:
-            db_filter = and_(ub.ReadBook.user_id == int(current_user.id),
-                             ub.ReadBook.read_status == ub.ReadBook.STATUS_FINISHED)
+            in_progress_ids = list(kobo_progress.keys())
+            if in_progress_ids:
+                db_filter = or_(
+                    and_(ub.ReadBook.user_id == int(current_user.id),
+                         ub.ReadBook.read_status == ub.ReadBook.STATUS_FINISHED),
+                    db.Books.id.in_(in_progress_ids)
+                )
+            else:
+                db_filter = and_(ub.ReadBook.user_id == int(current_user.id),
+                                 ub.ReadBook.read_status == ub.ReadBook.STATUS_FINISHED)
         else:
             db_filter = coalesce(ub.ReadBook.read_status, 0) != ub.ReadBook.STATUS_FINISHED
     else:
@@ -798,7 +822,8 @@ def render_read_books(page, are_read, as_xml=False, order=None):
             name = _('Unread Books') + ' (' + str(pagination.total_count) + ')'
             page_name = "unread"
         return render_title_template('index.html', random=random, entries=entries, pagination=pagination,
-                                     title=name, page=page_name, order=order[1])
+                                     title=name, page=page_name, order=order[1],
+                                     reading_progress=kobo_progress)
 
 
 def render_archived_books(page, sort_param):

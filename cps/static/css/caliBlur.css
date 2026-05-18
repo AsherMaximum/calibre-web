@@ -2991,6 +2991,13 @@ body > div.container-fluid > div > div.col-sm-10 > div > div > div.col-sm-3.col-
     margin-bottom: 10px
 }
 
+.cover .reading-in-progress {
+    font-size: 11px;
+    padding: 3px 5px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
 .book-meta > .bookinfo > .comments, .book-meta > .description {
     margin-top: 60px;
     font-size: 15px;
